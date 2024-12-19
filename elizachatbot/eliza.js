@@ -3,10 +3,6 @@
   of the elizachat bot based on https://dl.acm.org/doi/10.1145/365153.365168 this paper.
 
 
-/* The follow
-
-
-
 /* Declare 'patterns' as constant
    Define 'patterns' as an object that contains regex patterns and responses.
    The use of 'const' + 'Object.freeze' ensures patterns wont be reassigned and the object itself cannot be modified. 
@@ -26,34 +22,19 @@ const patterns = {
                         ],
         }
     ],
-    reminderPatterns:[
+    feelingPatterns: [
         {
-            // Regular expression to detect if user entered "you remind of"
-            regex: /you\s*remind\s*me\s*of\s*(.+)/i,
+            // Regular expression to detect if user entered "I am x".
+            regex: /i\s*am\s+(?:feeling\s+)?(.+)/i,
 
-            // Responses if match is detected */
-            responses: [
-                        "Why do you think I remind you of {0}?",
-                        " What makes you think of {0} when talking to me?",
-                        "Is it a good feeling to be reminded of {0}?"
-
-                       ]
-        }
-    ],
-    familyPatterns:[
-        {
-            // Regular expression to detect if user entered "mother, father, family, parent"
-            regex: /you\s*remind\s*me\s*of\s*(.+)/i,
-
-            // Responses if match is detected.
+            //Responses parsing x if match is detected.
             responses:[
-                "Tell me more about your family.",
-                "How does that make you feel about your family?",
-                "What role does your family play in your thoughts?"
-            ]
-        }
+                "Why do you think you are {1}?",
+                "How long have you felt that way?",
+                "What made you feel like {1}?"
+            ],
+        },
     ],
-
     needPatterns:[
         {
             // Regular expression to detect if user entered "I need x"
@@ -67,30 +48,31 @@ const patterns = {
             ]
         }
     ],
-
-    feelingPatterns: [
+    reminderPatterns:[
         {
-            // Regular expression to detect if user entered "I am x".
-            regex: /i\s*am\s+(feeling\s+)?(.+)/i,
+            // Regular expression to detect if user entered "you remind of"
+            regex: /you\s*remind\s*me\s*of\s*(.+)/i,
 
-            //Responses parsing x if match is detected.
-            responses:[
-                "Why do you think you are {1}?",
-                "How long have you felt that way?",
-                "What made you feel like {1}?"
-            ],
-        },
-
-        {
-            // Regular expression to detect if user entered "I feel x"
-            regex: /i\s*feel\s+(.+)/i,
-
-            // Responses parsing x if match is detected. */
+            // Responses if match is detected */
             responses: [
-                "Why do you feel {1}?",
-                "Does feeling {1} happen often?",
-                "How does that feeling affect you?"
-            ],
+                        "Why do you think I remind you of {1}?",
+                        " What makes you think of {1} when talking to me?",
+                        "Is it a good feeling to be reminded of {1}?"
+
+                       ]
+        }
+    ],
+    familyPatterns:[
+        {
+            // Regular expression to detect if user entered "mother, father, family, parent"
+            regex: /\b(mother|father|family|parent)\b/i,
+
+            // Responses if match is detected.
+            responses:[
+                "Tell me more about your family.",
+                "How does that make you feel about your family?",
+                "What role does your family play in your thoughts?"
+            ]
         }
     ],
 
@@ -111,7 +93,7 @@ const patterns = {
     goodbyePatterns: [
         {
             // Regular expression to detect if user entered "bye, goodbye, exit"
-            regex: /\b(sorry|apologize)\b/i,
+            regex: /(bye|goodbye|exit)/i,
 
             //  Responses if match is detected. 
             responses: [
@@ -140,6 +122,17 @@ const patterns = {
 
 }
 
+const patternGroups = [
+    'greetingPatterns',
+    'feelingPatterns',
+    'needPatterns',
+    'reminderPatterns',
+    'familyPatterns',
+    'sorryPatterns',
+    'goodbyePatterns',
+    'generalPatterns' 
+]
+
 // reflections object to mirror user input.
 const reflections = Object.freeze({
     "I": "you",
@@ -153,9 +146,7 @@ const reflections = Object.freeze({
 })
 
 // Function to reflect responses.
-function reflect(text){
-
-    
+function reflect(text){  
     return text
     .toLowerCase()
     .split(' ')
@@ -165,49 +156,52 @@ function reflect(text){
 
 // Function to select a suitable response based on the user's input.
 function respond(user_input){
+
+    console.log(user_input)
+    const cleanedInput = user_input.trim().toLowerCase()
+    console.log("Cleaned input: ", cleanedInput)
     
     // Loop through the patterns object and store the regular expression in the pattern and the responses in the responses list.
-    for(const [pattern, responses] of Object.entries(patterns)){
+    for(const group of patternGroups){
+        for (const pattern of patterns[group]){
+            console.log("Testing group:", group);
+            console.log("Testing pattern:", pattern.regex)
+
+            // regex object to store a case insensitive version of the current regular expression.
+            // const regex = new RegExp(pattern[0], "i")
         
-        // regex object to store a case insensitive version of the current regular expression.
-        const regex = new RegExp(pattern[0], "i")
-        
-        // run the regular expression on the user's input.
-        const match = regex.exec(user_input)
+            // run the regular expression on the user's input.
+            const match = cleanedInput.match(pattern.regex)
+            console.log("Match result:", match)
 
-        // if a match is found select the appropriate response.
-        if(match){
-
-            // https://stackoverflow.com/questions/4550505/getting-a-random-value-from-a-javascript-array
-            // select a pseudo-random response from responses list.
-            
-            const response = responses[Math.floor(Math.random() * responses.length)]
-
-            // https://www.decodingweb.dev/javascript-list-comprehension
-            // https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Array/slice
-            // Get the pars of the user input that matches the regular expression and apply the reflect function.
-            const reflected_groups = match.slice(1).map(group => reflect(group))
-
-            // if the reflected groups contains any strings inset them into response.
-            if(reflected_groups.length > 0){
-                // Replace the index in the response with the reflected group.
-                return reflected_groups.reduce((response, group, index) => {
-                        return response.replace(`{${index + 1}}`, group)
-                }, response)
-            } else {
+            // if a match is found select the appropriate response.
+            if(match){
+                console.log("Match found for group:", group)
+                // https://stackoverflow.com/questions/4550505/getting-a-random-value-from-a-javascript-array
+                // select a pseudo-random response from responses list.
+                const response = pattern.responses[Math.floor(Math.random() * pattern.responses.length)]
+                console.log("Selected response: ", response)
+                // if the reflected groups contains any strings inset them into response.
+                // https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/String/replace
+                if(match.length > 1){
+                    const finalResponse = response.replace(/{(\d+)}/g, (_, index) => match[parseInt(index)] || ''
+                )
+                console.log("Final response after replacements: ", finalResponse)
+                return finalResponse
+                }
+                console.log("Final response (no replacements): ", response);
                 return response
             }
-            
-            // If there are no reflected groups return the response as is.
-             // EO if statement
         }
-
-    } // EO for loop.
-
+    }
+    console.log("No match found. Returning default response.")
     // If no suitable response was found, return a default response.
     return 'Im not sure I understand. Can you elaborate'
+}
 
-} // EO response function.
+
+
+
 
 function sendMessage(){
     const USER_INPUT = document.getElementById("user-input").value.trim()
@@ -242,4 +236,25 @@ console.log(respond(test))
 test = " I need to talk."
 console.log(respond(test))
 
-console.log("hello")
+const goodbyeRegex = /\b(bye|goodbye|exit)\b/i
+const testInput = "exit"
+console.log(goodbyeRegex.test(testInput))
+
+
+
+                // https://www.decodingweb.dev/javascript-list-comprehension
+                // https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Array/slice
+                // Get the pars of the user input that matches the regular expression and apply the reflect function.
+                // const reflected_groups = match.slice(1).map(group => reflect(group))
+
+                // Replace the index in the response with the reflected group.
+                // return reflected_groups.reduce((response, group, index) => {
+                   //     return response.replace(`{${index + 1}}`, group)
+               // }, response)
+           // } else {
+           //     return response
+           // }
+            
+            // If there are no reflected groups return the response as is.
+             // EO if statement
+            //}
