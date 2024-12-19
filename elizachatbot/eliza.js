@@ -1,6 +1,9 @@
 /*https://github.com/ianmcloughlin/2425_emerging_technologies/blob/main/03_eliza.ipynb
-  All of the following code has been adapted from the above repoistory.
-*\
+  All of the following code has been adapted from the above repoistory and is my implementation
+  of the elizachat bot based on https://dl.acm.org/doi/10.1145/365153.365168 this paper.
+
+
+/* The follow
 
 
 
@@ -154,6 +157,29 @@ function respond(user_input){
 
 } // EO response function.
 
+function sendMessage(){
+    const USER_INPUT = document.getElementById("user-input").value.trim()
+    
+    if(!USER_INPUT) return
+
+    const INPUT_FIELD = document.getElementById("user-input")
+    INPUT_FIELD.value = ''
+
+    const CHATBOX = document.getElementById("chat-box")
+    CHATBOX.innerHTML += `
+                            <div class="message user-message">
+                                <div class="message-content">${USER_INPUT}</div></div>
+                                `
+
+    const RESPONSE = respond(USER_INPUT)
+    CHATBOX.innerHTML += `
+                            <div class="message bot-message">
+                                <div class="message-content">${RESPONSE}</div>
+                            </div>`
+
+    CHATBOX.scrollTop = CHATBOX.scrollHeight
+}
+
 // tests
  test = "I am yours"
 console.log(reflect(test))
@@ -163,3 +189,5 @@ console.log(respond(test))
 
 test = " I need to talk."
 console.log(respond(test))
+
+console.log("hello")
