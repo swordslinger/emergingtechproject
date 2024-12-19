@@ -1,11 +1,11 @@
 /*https://github.com/ianmcloughlin/2425_emerging_technologies/blob/main/03_eliza.ipynb
-  All of the followin code has been adapted from the above repoistory.
+  All of the following code has been adapted from the above repoistory.
 *\
 
 
 
 /* Declare 'patterns' as constant
-   Define 'patterns' as an object that cointains regex patterns and responses.
+   Define 'patterns' as an object that contains regex patterns and responses.
    The use of 'const' + 'Object.freeze' ensures patterns wont be reassigned and the object itself cannot be modified. 
    */
 
@@ -102,21 +102,11 @@ const reflections = Object.freeze({
 // Function to reflect responses.
 function reflect(text){
 
-    // processes and reflected reponses.
+    
     return text
-
-    // converts text to lowercase.
     .toLowerCase()
-
-    // Splits the text into words.
     .split(' ')
-
-    /* if word has a reflection it is transformed
-       if not it remains unchanged. */
     .map(word => reflections[word] || word)
-
-    /* Joins the words and there reflections(if they exist)
-       Back into a single string. */
     .join(' ');
 }
 
@@ -126,17 +116,17 @@ function respond(user_input){
     // Loop through the patterns object and store the regular expression in the pattern and the responses in the responses list.
     for (const [pattern, responsesList] of Object.entries(patterns)){
         
-        // regex object to store a case insesntive version of the current regular expression.
+        // regex object to store a case insensitive version of the current regular expression.
         const regex = new RegExp(pattern,'i')
         
         // run the regular expression on the user's input.
         const match = regex.exec(user_input)
 
-        // if a match is found select the appropirate response.
+        // if a match is found select the appropriate response.
         if(match){
 
             // https://stackoverflow.com/questions/4550505/getting-a-random-value-from-a-javascript-array
-            // select a pseduo-random response from responses list.
+            // select a pseudo-random response from responses list.
             const response = responsesList[Math.floor(Math.random() * responsesList.length)]
 
             // https://www.decodingweb.dev/javascript-list-comprehension
@@ -151,7 +141,7 @@ function respond(user_input){
                 return reflected_groups.reduce((response, group, index) =>
                     response.replace(`{${index}}`, group), response)
             
-            // If there are no relfected groups return the response as is.
+            // If there are no reflected groups return the response as is.
             } else {
                 return response
             }
@@ -164,6 +154,12 @@ function respond(user_input){
 
 } // EO response function.
 
-// example
-const test = "I am yours"
+// tests
+ test = "I am yours"
 console.log(reflect(test))
+
+test = "I am feeling funny."
+console.log(respond(test))
+
+test = " I need to talk."
+console.log(respond(test))
